@@ -528,13 +528,13 @@ static bool
 convert_mouse_motion(const SDL_MouseMotionEvent *from, struct screen *screen,
                      struct control_msg *to) {
     to->type = CONTROL_MSG_TYPE_INJECT_TOUCH_EVENT;
-    to->inject_touch_event.action = AMOTION_EVENT_ACTION_MOVE;
     to->inject_touch_event.pointer_id = POINTER_ID_MOUSE;
     to->inject_touch_event.position.screen_size = screen->frame_size;
     to->inject_touch_event.position.point =
         screen_convert_window_to_frame_coords(screen, from->x, from->y);
     to->inject_touch_event.pressure = 1.f;
     to->inject_touch_event.buttons = convert_mouse_buttons(from->state);
+    to->inject_touch_event.action = to->inject_touch_event.buttons == 0 ? AMOTION_EVENT_ACTION_HOVER_MOVE : AMOTION_EVENT_ACTION_MOVE;
 
     return true;
 }
@@ -542,10 +542,6 @@ convert_mouse_motion(const SDL_MouseMotionEvent *from, struct screen *screen,
 void
 input_manager_process_mouse_motion(struct input_manager *im,
                                    const SDL_MouseMotionEvent *event) {
-    if (!event->state) {
-        // do not send motion events when no button is pressed
-        return;
-    }
     if (event->which == SDL_TOUCH_MOUSEID) {
         // simulated from touch events, so it's a duplicate
         return;
